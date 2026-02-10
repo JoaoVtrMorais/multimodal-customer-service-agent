@@ -167,7 +167,7 @@ def check_content_safety(*, text: str | None = None, media: str | None = None) -
     """
     # Create a tracing span for this moderation check
     with tracer.start_as_current_span(
-        name="moderate_content"
+        name="moderate_text"
     ) as span:
 
         # Route to the appropriate moderation function
@@ -234,8 +234,10 @@ class ChatSessionWithTracing:
         """
         # Create a tracing span for this chat turn
         with tracer.start_as_current_span(
-            name="chat_turn", context=trace.set_span_in_context(self.conversation_span)
-        ) as span:
+            name="chat_turn",
+            attributes={"session_id": self.session_id},
+            context=trace.set_span_in_context(self.conversation_span)
+        ):
             
             logger.info(f"New turn - Text: '{message.get('text', '')[:50]}...', Files: {len(message.get('files', []))}")
 
@@ -261,7 +263,15 @@ class ChatSessionWithTracing:
                         feedback = f"⚠️ Content flagged: {safety_message}"
                         response = "[This content was flagged by moderation and not sent to the AI. Please try again.]"
 
-                        span.set_attribute(key="feedback", value=feedback)
+                        with tracer.start_as_current_span(
+                            name="feedback",
+                            context=trace.set_span_in_context(self.conversation_span)
+                        ) as feedback_span:
+                            feedback_span.set_attributes({
+                                "session.id": self.session_id,
+                                "feedback.type": "moderation_block_text",
+                                "feedback.message": feedback,
+                            })
 
                         return response, past_messages, feedback
 
@@ -284,6 +294,16 @@ class ChatSessionWithTracing:
                                 response = (
                                     "[This content was flagged by moderation and not sent to the AI. Please try again.]"
                                 )
+
+                                with tracer.start_as_current_span(
+                                    name="feedback",
+                                    context=trace.set_span_in_context(self.conversation_span)
+                                ) as feedback_span:
+                                    feedback_span.set_attributes({
+                                        "session.id": self.session_id,
+                                        "feedback.type": "moderation_block_media",
+                                        "feedback.message": feedback,
+                                    })
 
                                 return response, past_messages, feedback
 

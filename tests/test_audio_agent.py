@@ -15,7 +15,7 @@ from pydantic_ai import models
 from pydantic_ai.models.test import TestModel
 
 from multimodal_moderation.agents.audio_agent import moderate_audio, audio_moderation_agent
-from multimodal_moderation.types.moderation_result import AudioModerationResult
+from multimodal_moderation.types.moderation_result import ModerationResult
 from multimodal_moderation.env import get_default_model_choice
 
 # Block accidental real API calls - all tests should use TestModel
@@ -39,16 +39,16 @@ def test_moderate_audio_exists():
     assert callable(moderate_audio), "moderate_audio should be a callable function"
 
 
-async def test_moderate_audio_returns_audio_moderation_result():
-    """Verify moderate_audio returns an AudioModerationResult object"""
+async def test_moderate_audio_returns_moderation_result():
+    """Verify moderate_audio returns an ModerationResult object"""
     model = _get_model()
     audio_bytes = _load_test_audio()
 
     with audio_moderation_agent.override(model=TestModel()):
         result = await moderate_audio(model, audio_bytes, media_type="audio/mpeg")
 
-    assert isinstance(result, AudioModerationResult), \
-        f"moderate_audio should return AudioModerationResult, got {type(result)}"
+    assert isinstance(result, ModerationResult), \
+        f"moderate_audio should return ModerationResult, got {type(result)}"
 
 
 async def test_moderate_audio_has_required_fields():

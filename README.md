@@ -2,6 +2,8 @@
 
 This is an AI-powered content moderation system for customer service interactions at a fictional company called ACME Enterprise.
 
+![System image](./static/image.png)
+
 What it does:
 - Moderates text, images, videos, and audio before they're sent to customers
 - Detects issues like: PII (personally identifiable information), unprofessional tone, unfriendly content, disturbing images/videos, and low-quality media
